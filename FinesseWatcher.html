@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Finesse Watcher</title>
+    <link href="style/style.css"  media="screen" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+        <label for="users">Choose a user:</label>
+
+        <select name="users" id="users"></select><button onclick="SelectUser()">Select</button>
+
+        <h1>No user selected</h1>
+
+    <script>
+
+        let username
+        
+        let FetchFinesseData = () => {
+
+            const url = "http://localhost:5000/finesse"
+
+            let options = {
+
+                method: "GET",
+                mode: "cors",
+
+            }
+
+            var audio = new Audio('alert.aac')
+                
+            fetch(url, options)
+            .then(res => res.json())
+            .then(data => { 
+
+                if(username != undefined) {
+
+                    // if user is logged out
+
+                    for(let i = 0; i < data.other.length; i++) {
+                    
+                        if(data.other[i].id == username){
+
+                            audio.play()
+                            document.getElementsByTagName("body").item(0).style.backgroundColor = "#FF0000"
+                            document.getElementsByTagName("h1").item(0).innerHTML = `User ${username} disconnected`
+
+                            break
+
+
+                        }else if(data.other[i].id != username && i == data.other.length-1) {
+
+                            audio.pause()
+                            document.getElementsByTagName("body").item(0).style.backgroundColor = "#CCCCCC"
+                            document.getElementsByTagName("h1").item(0).innerHTML = `User ${username} unavailable`
+                            
+                        }
+                    
+                    }
+
+                    // if user is ready
+
+                    for(i in data.ready) {
+
+                        if(data.ready[i].id == username) {
+
+                            audio.pause()
+                            document.getElementsByTagName("body").item(0).style.backgroundColor = "#20CC20"
+                            document.getElementsByTagName("h1").item(0).innerHTML = `User ${username} connected`
+
+                        }
+
+                    }
+
+                    // if user is away
+                    
+                    for(let i = 0; i < data.away.length; i++) {
+
+                        if(data.away[i].id == username){
+
+                            audio.pause()
+                            document.getElementsByTagName("body").item(0).style.backgroundColor = "#FF0000"
+                            document.getElementsByTagName("h1").item(0).innerHTML = `User ${username} away`
+
+                        }
+
+                    }
+
+                }else {
+
+                    userData = data
+                    RefreshUserData()
+
+                }
+                
+                
+            })
+
+                
+            .catch(err => {
+
+                audio.play()
+                document.getElementsByTagName("body").item(0).style.backgroundColor = "#FF0000"
+                document.getElementsByTagName("h1").item(0).innerHTML = `Error: ${err}`
+
+                console.log(err)
+
+            })
+
+        }
+        
+        let RefreshUserData = () => {
+
+            document.getElementById("users").innerHTML = "<optgroup label='Ready'>"
+
+            for(i in userData.ready) {
+
+                document.getElementById("users").innerHTML += `<option value="${userData.ready[i].id}">${userData.ready[i].name}</option>`
+
+            }
+
+            document.getElementById("users").innerHTML += "</optgroup><optgroup label='Busy'>"
+
+            for(i in userData.busy) {
+
+                document.getElementById("users").innerHTML += `<option value="${userData.busy[i].id}">${userData.busy[i].name}</option>`
+
+            }
+
+            document.getElementById("users").innerHTML += "</optgroup><optgroup label='Away'>"
+
+            for(i in userData.away) {
+
+                document.getElementById("users").innerHTML += `<option value="${userData.away[i].id}">${userData.away[i].name}</option>`
+
+            }
+
+            document.getElementById("users").innerHTML += "</optgroup><optgroup label='Other / Signed out'>"
+
+            for(i in userData.other) {
+
+                document.getElementById("users").innerHTML += `<option value="${userData.other[i].id}">${userData.other[i].name}</option>`
+
+            }
+
+            document.getElementById("users").innerHTML += "</optgroup>"
+        }
+
+        FetchFinesseData()
+        setInterval(FetchFinesseData, 10000)
+
+        let SelectUser = () => {
+
+            username = document.getElementById("users").value
+            FetchFinesseData()
+
+        }
+
+    </script>
+    
+</body>
+</html>
