@@ -25,3 +25,6 @@ Bugs
 
 Todo
 -Fail over to secondary voice server in case of outage
+
+Node:
+Requires libraries xml2js and express
